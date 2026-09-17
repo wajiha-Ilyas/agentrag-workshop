@@ -147,6 +147,9 @@ activemq-data/
 # SageMath parsed files
 *.sage.py
 
+# AgentRAG vector store
+.chroma/
+
 # Environments
 .env
 .envrc

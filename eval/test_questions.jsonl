@@ -1,0 +1,10 @@
+{"question": "What is the ReAct framework and how does it interleave reasoning and acting?", "expected_route": "retrieve"}
+{"question": "What are the four core components of most LLM agent architectures?", "expected_route": "retrieve"}
+{"question": "Why does AgentRAG use LangGraph instead of a single prompt?", "expected_route": "retrieve"}
+{"question": "What is the standard guardrail against infinite agent loops?", "expected_route": "retrieve"}
+{"question": "What is 47 * 8 - 12?", "expected_route": "tool:calculator"}
+{"question": "If I split a bill of 3400 between 4 people, how much does each person pay?", "expected_route": "tool:calculator"}
+{"question": "What is today's date and time?", "expected_route": "tool:datetime"}
+{"question": "What is the current weather in Islamabad?", "expected_route": "tool:web_search"}
+{"question": "Who won the most recent ICC Champions Trophy?", "expected_route": "tool:web_search"}
+{"question": "Say hello and introduce yourself in one sentence.", "expected_route": "answer"}
