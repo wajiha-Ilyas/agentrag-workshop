@@ -22,6 +22,8 @@ Ilyas (Mobiz) for CAIS — COMSATS AI Society, COMSATS University Islamabad. See
 | Web search | duckduckgo-search |
 | Calculator | simpleeval |
 | UI (optional) | Streamlit |
+| Demo frontend | FastAPI + vanilla HTML/JS |
+| Conversation history | Redis (local, last 5 sessions) |
 
 ## Setup
 
@@ -59,6 +61,30 @@ which tools were called).
 streamlit run app_streamlit.py
 ```
 
+## Run the demo frontend
+
+A browser chat UI (FastAPI backend + vanilla HTML/JS) with a sidebar showing your
+last 5 conversations, backed by Redis.
+
+Install and start Redis locally (Ubuntu/Debian):
+
+```bash
+sudo apt install redis-server
+sudo systemctl start redis-server   # or: redis-server --daemonize yes
+redis-cli ping                      # should print PONG
+```
+
+Then run the backend (it also serves the frontend at the same address):
+
+```bash
+uvicorn src.api:app --reload
+```
+
+Open http://127.0.0.1:8000 in a browser. Each new question either continues the
+current conversation or starts one; click "+ New conversation" to start fresh, or
+click any entry in the sidebar to reopen it. Only the 5 most recent conversations
+are kept — starting a 6th evicts the oldest one from Redis.
+
 ## Run the evaluation suite
 
 ```bash
@@ -94,7 +120,10 @@ agentrag/
 │   ├── graph.py              # LangGraph StateGraph definition
 │   ├── prompts.py            # system + planner prompt templates
 │   ├── agent.py              # builds & compiles the graph, exposes run_agent(query)
-│   └── cli.py                # simple REPL entrypoint
+│   ├── cli.py                # simple REPL entrypoint
+│   ├── api.py                # FastAPI backend for the demo frontend
+│   └── memory.py             # Redis-backed store for the last 5 conversations
+├── frontend/                 # static demo UI (HTML/CSS/JS) served by src/api.py
 ├── app_streamlit.py          # optional chat UI
 ├── eval/
 │   ├── test_questions.jsonl  # sample Q&A pairs for the eval segment

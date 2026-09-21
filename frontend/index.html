@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentRAG</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <h1>AgentRAG</h1>
+      </div>
+      <button id="new-chat-btn" class="new-chat-btn">+ New conversation</button>
+
+      <div class="sidebar-subtitle">Recent conversations</div>
+      <ul id="session-list" class="session-list"></ul>
+
+      <div class="sidebar-footer">
+        CAIS Workshop &middot; Wajiha Ilyas
+      </div>
+    </aside>
+
+    <main class="chat">
+      <header class="chat-header">
+        <div>
+          <h2>Ask AgentRAG</h2>
+          <p>Local docs (RAG) &middot; calculator &middot; web search &middot; date/time</p>
+        </div>
+      </header>
+
+      <div id="messages" class="messages">
+        <div class="empty-state">
+          <p>Ask about the local docs, do math, search the web, or ask the time.</p>
+          <div class="suggestions">
+            <button class="suggestion" data-q="What is the ReAct framework?">What is the ReAct framework?</button>
+            <button class="suggestion" data-q="What is 47 * 8 - 12?">What is 47 * 8 - 12?</button>
+            <button class="suggestion" data-q="What is today's date and time?">What is today's date and time?</button>
+          </div>
+        </div>
+      </div>
+
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask a question..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
