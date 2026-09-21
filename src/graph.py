@@ -1,6 +1,7 @@
 """LangGraph StateGraph definition: planner -> retriever/tools/answer -> generator -> reflect."""
 
 import os
+import re
 from typing import List, Literal, TypedDict
 
 from langgraph.graph import StateGraph, END
@@ -17,12 +18,24 @@ TOOL_LABEL_TO_NAME = {
     "datetime": "get_current_datetime",
 }
 
+_EXPRESSION_RE = re.compile(r"[-+*/().\d\s%^]+")
+
+
+def _extract_expression(query: str) -> str:
+    """Pulls the arithmetic expression out of a natural-language query, e.g.
+    'What is 47 * 8 - 12?' -> '47 * 8 - 12'. Falls back to the raw query if
+    nothing expression-like is found.
+    """
+    candidates = [m.strip() for m in _EXPRESSION_RE.findall(query) if any(ch.isdigit() for ch in m)]
+    return max(candidates, key=len) if candidates else query
+
 
 class AgentState(TypedDict):
     query: str
     messages: List[str]
     context: List[str]
     tool_calls_made: int
+    loop_count: int
     final_answer: str
     next_action: str
 
@@ -35,15 +48,17 @@ def get_llm():
         from langchain_ollama import ChatOllama
 
         model = os.getenv("OLLAMA_MODEL", "llama3.2")
-        return ChatOllama(model=model, temperature=0)
+        return ChatOllama(model=model, temperature=0, timeout=30)
 
     from langchain_groq import ChatGroq
 
-    model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-    return ChatGroq(model=model, temperature=0)
+    model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+    return ChatGroq(model=model, temperature=0, timeout=30, max_retries=1)
 
 
 def planner_node(state: AgentState) -> AgentState:
+    state["loop_count"] += 1
+
     llm = get_llm()
     gathered = "\n".join(state["context"]) if state["context"] else "(nothing gathered yet)"
     prompt = (
@@ -79,9 +94,12 @@ def tool_executor_node(state: AgentState) -> AgentState:
     if tool_fn is None:
         state["context"].append(f"[tool error] unknown tool label: {label}")
     else:
-        args = {"query": state["query"]} if tool_name in ("web_search", "calculator") else {}
         if tool_name == "calculator":
-            args = {"expression": state["query"]}
+            args = {"expression": _extract_expression(state["query"])}
+        elif tool_name == "web_search":
+            args = {"query": state["query"]}
+        else:
+            args = {}
         try:
             result = tool_fn.invoke(args) if args else tool_fn.invoke({})
         except Exception as e:
@@ -106,7 +124,7 @@ def generator_node(state: AgentState) -> AgentState:
 
 
 def reflect_node(state: AgentState) -> AgentState:
-    if state["tool_calls_made"] >= MAX_LOOPS:
+    if state["loop_count"] >= MAX_LOOPS:
         state["messages"].append("reflect -> loop cap reached, forcing done")
         state["next_action"] = "done"
         return state

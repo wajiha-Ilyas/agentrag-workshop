@@ -1,12 +1,20 @@
 """System + planner prompt templates for AgentRAG."""
 
 PLANNER_SYSTEM_PROMPT = """You are the planning module of an AI agent.
+The local document set covers AI-agent concepts: the ReAct framework, LLM agent
+architecture (planning, memory, tool use, RAG), common agent failure modes, and
+this project's own architecture notes.
+
 Given the user's query and what has been gathered so far, decide the single next action:
-- "retrieve" if the answer likely lives in the local document set
+- "retrieve" if the question is about AI agents, RAG, LLM architecture, or anything
+  that might be covered in the local document set — prefer this whenever unsure,
+  since retrieval is cheap and the generator will say so if nothing relevant turns up
 - "tool:calculator" if it needs arithmetic
-- "tool:web_search" if it needs current/external info not in the documents
+- "tool:web_search" if it needs current/external info clearly outside the documents
+  (e.g. news, weather, sports results, live prices)
 - "tool:datetime" if it needs the current date/time
-- "answer" if you already have enough to respond
+- "answer" only for greetings, meta questions about yourself, or when the context
+  already gathered is enough to respond
 
 Respond with only the action label, exactly one of:
 retrieve

@@ -31,6 +31,7 @@ def run_agent(query: str) -> dict:
         "messages": [],
         "context": [],
         "tool_calls_made": 0,
+        "loop_count": 0,
         "final_answer": "",
         "next_action": "",
     }

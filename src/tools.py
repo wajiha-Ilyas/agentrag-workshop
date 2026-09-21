@@ -53,7 +53,7 @@ def web_search(query: str) -> str:
     Returns up to 3 results as titles + snippets.
     """
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
 
         with DDGS() as ddgs:
             results = list(ddgs.text(query, max_results=3))
