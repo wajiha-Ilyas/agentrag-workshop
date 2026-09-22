@@ -67,11 +67,14 @@ def post_message(req: MessageRequest):
     try:
         if not session_id or not memory.session_exists(session_id):
             session_id = memory.create_session(query)
+            history = []
+        else:
+            history = memory.get_messages(session_id)
         memory.append_message(session_id, "user", query)
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Redis unavailable: {e}")
 
-    result = run_agent(query)
+    result = run_agent(query, history=history)
 
     try:
         memory.append_message(session_id, "assistant", result["answer"], result["trace"])

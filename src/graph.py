@@ -52,6 +52,7 @@ def _extract_expression(query: str) -> str:
 
 class AgentState(TypedDict):
     query: str
+    history: str
     messages: List[str]
     context: List[str]
     tool_calls_made: int
@@ -88,6 +89,7 @@ def planner_node(state: AgentState) -> AgentState:
     gathered = "\n".join(state["context"]) if state["context"] else "(nothing gathered yet)"
     prompt = (
         f"{PLANNER_SYSTEM_PROMPT}\n\n"
+        f"Conversation history:\n{state.get('history') or '(none)'}\n\n"
         f"User query: {state['query']}\n\n"
         f"Gathered so far:\n{gathered}"
     )
@@ -139,7 +141,8 @@ def tool_executor_node(state: AgentState) -> AgentState:
 def generator_node(state: AgentState) -> AgentState:
     llm = get_llm()
     context_text = "\n\n".join(state["context"]) if state["context"] else "(no context gathered)"
-    system_prompt = GENERATOR_SYSTEM_PROMPT.format(context=context_text)
+    history_text = state.get("history") or "(none)"
+    system_prompt = GENERATOR_SYSTEM_PROMPT.format(context=context_text, history=history_text)
     prompt = f"{system_prompt}\n\nQuestion: {state['query']}"
 
     response = llm.invoke(prompt)

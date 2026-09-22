@@ -1,4 +1,6 @@
-"""Builds & compiles the AgentRAG graph, and exposes run_agent(query)."""
+"""Builds & compiles the AgentRAG graph, and exposes run_agent(query, history)."""
+
+from typing import List, Optional
 
 from dotenv import load_dotenv
 
@@ -8,6 +10,9 @@ load_dotenv()
 
 _compiled_graph = None
 
+# How many prior turns (user+assistant pairs) to include as conversation history.
+MAX_HISTORY_TURNS = 6
+
 
 def _get_graph():
     global _compiled_graph
@@ -16,8 +21,27 @@ def _get_graph():
     return _compiled_graph
 
 
-def run_agent(query: str) -> dict:
-    """Runs the agent on a single query.
+def _format_history(history: Optional[List[dict]]) -> str:
+    if not history:
+        return ""
+    trimmed = history[-MAX_HISTORY_TURNS * 2 :]
+    lines = []
+    for m in trimmed:
+        role = "User" if m.get("role") == "user" else "Assistant"
+        content = (m.get("content") or "").strip()
+        if content:
+            lines.append(f"{role}: {content}")
+    return "\n".join(lines)
+
+
+def run_agent(query: str, history: Optional[List[dict]] = None) -> dict:
+    """Runs the agent on a single query, with optional prior conversation turns.
+
+    Args:
+        query: the user's current message.
+        history: prior messages in the session, oldest first, each a dict with
+            at least "role" ("user"/"assistant") and "content" — as returned by
+            src.memory.get_messages(). Does not include the current query.
 
     Returns a dict with:
         answer: str            -- the final answer
@@ -28,6 +52,7 @@ def run_agent(query: str) -> dict:
 
     initial_state = {
         "query": query,
+        "history": _format_history(history),
         "messages": [],
         "context": [],
         "tool_calls_made": 0,
