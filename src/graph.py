@@ -20,6 +20,26 @@ TOOL_LABEL_TO_NAME = {
 
 _EXPRESSION_RE = re.compile(r"[-+*/().\d\s%^]+")
 
+# Deterministic fast-path so greetings/farewells/self-questions never depend on the
+# LLM planner correctly classifying them — these should always go straight to "answer"
+# without wasting a retrieval or tool call.
+_GREETING_RE = re.compile(
+    r"^\s*(hi|hello|hey|hiya|yo|greetings|good\s+(morning|afternoon|evening|night))\b",
+    re.IGNORECASE,
+)
+_FAREWELL_RE = re.compile(
+    r"\b(bye|goodbye|good\s*bye|see\s*you(\s+later)?|take\s*care|farewell)\b",
+    re.IGNORECASE,
+)
+_SELF_META_RE = re.compile(
+    r"\b(who are you|what are you|what can you do|your capabilit\w*|about yourself|tell me about you(r|rself)?)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_direct_answer_query(query: str) -> bool:
+    return bool(_GREETING_RE.search(query) or _FAREWELL_RE.search(query) or _SELF_META_RE.search(query))
+
 
 def _extract_expression(query: str) -> str:
     """Pulls the arithmetic expression out of a natural-language query, e.g.
@@ -58,6 +78,11 @@ def get_llm():
 
 def planner_node(state: AgentState) -> AgentState:
     state["loop_count"] += 1
+
+    if state["loop_count"] == 1 and not state["context"] and _is_direct_answer_query(state["query"]):
+        state["next_action"] = "answer"
+        state["messages"].append("planner -> answer (greeting/farewell/self fast-path)")
+        return state
 
     llm = get_llm()
     gathered = "\n".join(state["context"]) if state["context"] else "(nothing gathered yet)"

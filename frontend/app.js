@@ -93,7 +93,12 @@ function appendMessage(role, content, trace) {
 
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-  bubble.textContent = content;
+  if (role === "assistant" && window.marked && window.DOMPurify) {
+    bubble.innerHTML = DOMPurify.sanitize(marked.parse(content));
+  } else {
+    bubble.classList.add("plain");
+    bubble.textContent = content;
+  }
   wrapper.appendChild(bubble);
 
   if (role === "assistant" && trace && trace.length) {
@@ -120,7 +125,7 @@ function appendThinking() {
   const wrapper = document.createElement("div");
   wrapper.className = "message assistant thinking";
   const bubble = document.createElement("div");
-  bubble.className = "bubble";
+  bubble.className = "bubble plain";
   bubble.textContent = "thinking…";
   wrapper.appendChild(bubble);
   messagesEl.appendChild(wrapper);
