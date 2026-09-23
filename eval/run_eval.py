@@ -18,7 +18,8 @@ QUESTIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_
 def extract_planner_route(trace: list) -> str:
     for entry in trace:
         if entry.startswith("planner -> "):
-            return entry.split("planner -> ", 1)[1]
+            # Strip any trailing annotation, e.g. "answer (greeting/farewell/self fast-path)".
+            return entry.split("planner -> ", 1)[1].split(" ", 1)[0]
     return "unknown"
 
 

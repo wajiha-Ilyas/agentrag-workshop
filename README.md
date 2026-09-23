@@ -14,7 +14,7 @@ Ilyas (Mobiz) for CAIS — COMSATS AI Society, COMSATS University Islamabad. See
 
 | Layer | Choice |
 |---|---|
-| LLM (primary) | Groq API (Llama 3.3 70B) |
+| LLM (primary) | Groq API (`openai/gpt-oss-20b` by default) |
 | LLM (offline backup) | Ollama (`llama3.2`) |
 | Embeddings | sentence-transformers (`all-MiniLM-L6-v2`) |
 | Vector store | ChromaDB (embedded/local) |
@@ -64,7 +64,9 @@ streamlit run app_streamlit.py
 ## Run the demo frontend
 
 A browser chat UI (FastAPI backend + vanilla HTML/JS) with a sidebar showing your
-last 5 conversations, backed by Redis.
+last 5 conversations, backed by Redis. Assistant replies render as Markdown (tables,
+bold, lists, code) via `marked` + `DOMPurify`, and each session's prior turns are fed
+back into the agent so it can recall things you told it earlier (e.g. your name).
 
 Install and start Redis locally (Ubuntu/Debian):
 
@@ -119,7 +121,7 @@ agentrag/
 │   ├── tools.py              # calculator, web_search, get_current_datetime, retrieve_docs
 │   ├── graph.py              # LangGraph StateGraph definition
 │   ├── prompts.py            # system + planner prompt templates
-│   ├── agent.py              # builds & compiles the graph, exposes run_agent(query)
+│   ├── agent.py              # builds & compiles the graph, exposes run_agent(query, history)
 │   ├── cli.py                # simple REPL entrypoint
 │   ├── api.py                # FastAPI backend for the demo frontend
 │   └── memory.py             # Redis-backed store for the last 5 conversations
@@ -144,6 +146,7 @@ agentrag/
 ## Extending it
 
 See §11 of [ai-agent-workshop-plan.md](ai-agent-workshop-plan.md) for challenge ideas:
-add a fifth tool, add short-term memory, add scope guardrails, swap in the local
-Ollama model, or add a confidence score that routes low-confidence answers back
-through `reflect`.
+add a fifth tool, add scope guardrails, swap in the local Ollama model, add a
+confidence score that routes low-confidence answers back through `reflect`, or
+extend memory beyond the current per-session window (e.g. persisting facts about
+the user across sessions, not just within one).
